@@ -1,6 +1,7 @@
 import requests
 import urllib.request
 import time
+import PyPDF2
 from bs4 import BeautifulSoup
 
 def main():
@@ -10,13 +11,16 @@ def main():
 
     soup = BeautifulSoup(response.text, "html.parser")
 
-    for i in range(17, 29):
+    for i in range(17, 29): #request all PDFs
         one_link = soup.findAll('a')[i].get('href')
         print(one_link)
+        filename = one_link[51:]
+        print(filename)
         downloadURL = 'https://www.jerseystrong.com' + one_link
-        urllib.request.urlretrieve(downloadURL)
-
+        print(downloadURL)
+        urllib.request.urlretrieve(downloadURL, filename)
         time.sleep(1)
+    
     #for link in soup.find_all('a'):
     #    print(link.get('href'))
 
