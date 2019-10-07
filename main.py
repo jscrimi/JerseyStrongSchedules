@@ -11,7 +11,7 @@ def main():
 
     soup = BeautifulSoup(response.text, "html.parser")
 
-    for i in range(17, 29): #request all PDFs
+    for i in range(17, 29): #request and download all PDFs
         one_link = soup.findAll('a')[i].get('href')
         print(one_link)
         filename = one_link[51:]
@@ -20,9 +20,9 @@ def main():
         print(downloadURL)
         urllib.request.urlretrieve(downloadURL, filename)
         time.sleep(1)
+
+    #for each pdf, open and scan in the first page
     
-    #for link in soup.find_all('a'):
-    #    print(link.get('href'))
 
     return 1
 
