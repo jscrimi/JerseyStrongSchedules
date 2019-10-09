@@ -10,6 +10,8 @@ import os
 
 def main():
     schedule = pd.DataFrame(columns=['Location', 'Day', 'Time', 'Class', 'Instructor'])
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.width', 100)
     url = 'https://www.jerseystrong.com/group-fitness-classes-in-nj'
     baseURL = 'https://www.jerseystrong.com'
 
@@ -35,16 +37,42 @@ def main():
     extractedSRC = testiFrames[0].get('src')
     print(extractedSRC)
 
-
     #Render Dynamic WebPage and grab HTML from that
     driver = webdriver.Chrome()
     driver.implicitly_wait(30)
     driver.get(extractedSRC)
 
+    python_button = driver.find_element_by_id("content")
+    python_button.click()
+
     #After opening the url, hand the source to Beautiful Soup
     dynamicSoup = bs.BeautifulSoup(driver.page_source, 'lxml')
-    print(dynamicSoup)
+    driver.quit()
+    tables = dynamicSoup.find_all('tr')
+    days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', ' ']
+    day = 0
 
+    for row in tables:
+        #print(row)
+        if row.text.startswith("\n" + days[day]):
+            #print(days[day])
+            day = day + 1
+        elif (len(row.contents) == 3):
+            continue
+        else:
+            location = testURL[45:]
+            time = row.contents[1].text
+            courseAndInstructor = row.contents[5].text.split('with ')
+            #print(courseAndInstructor)
+            if(len(courseAndInstructor) == 2):
+                course = courseAndInstructor[0]
+                instructor = courseAndInstructor[1]
+            else:
+                course = courseAndInstructor[0]
+                instructor = "N/A"
+
+            schedule = schedule.append(pd.Series([location,days[day-1],time,course,instructor],index=schedule.columns), ignore_index=True)
+    print (schedule)
 
     # for i in filteredStrings: #go to each website and parse out each schedule item
     #     print(i[17:])
