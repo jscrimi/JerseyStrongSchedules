@@ -1,13 +1,20 @@
 import requests
 import re
-import pandas
-import urllib.request
+import pandas as pd
+import PyQt5
 import time
-import PyPDF2
 from bs4 import BeautifulSoup
 
 def main():
+
+    Class Render(QWebPage):
+    
+
+
+    schedule = pd.DataFrame(columns=['Location', 'Day', 'Time', 'Class', 'Instructor'])
     url = 'https://www.jerseystrong.com/group-fitness-classes-in-nj'
+    baseURL = 'https://www.jerseystrong.com'
+
     response = requests.get(url)
     #print(response)
 
@@ -20,28 +27,35 @@ def main():
     #print(splitString)
     filteredStrings = [i for i in splitString if i.startswith('/class-schedules')]
     filteredStrings = ([s.replace('"', '') for s in filteredStrings])
-    for i in filteredStrings:
-        print(i)
 
 
-    #for i in range(17, 29): #request and download all PDFs
-    #    one_link = soup.findAll('a')[i].get('href')
-    #    print(one_link)
-    #    filename = one_link[51:]
-    #    print(filename)
-    #    downloadURL = 'https://www.jerseystrong.com' + one_link
-    #    print(downloadURL)
-    #    urllib.request.urlretrieve(downloadURL, filename)
-        #readFirstPage(filename)
-    #    time.sleep(1)
+    #TEST
+    testURL = 'https://www.jerseystrong.com/class-schedules-east-brunswick'
+    testResponse = requests.get(testURL).text
+    testSoup = BeautifulSoup(testResponse, 'html.parser')
+    testiFrames = testSoup.find_all('iframe')
+    extractedSRC = testiFrames[0].get('src')
+    print(extractedSRC)
+
+    srcResponse = requests.get(extractedSRC).text
+    print(srcResponse)
+
+
+    # for i in filteredStrings: #go to each website and parse out each schedule item
+    #     print(i[17:])
+    #     scheduleURL = baseURL + i
+    #     scheduleResponse = requests.get(scheduleURL)
+    #     #print(scheduleResponse)
+    #     #soup =        BeautifulSoup(response.text,         "html.parser")
+    #     #print(scheduleResponse.text)
+    #     scheduleSoup = BeautifulSoup(scheduleResponse.text, "html.parser")
+    #     #print(scheduleSoup)
+    #     tables = scheduleSoup.find_all('div')
+    #     print(tables)
+    #
+    #     time.sleep(1)
+
     return 0
-
-#def readFirstPage(filename):
-#    pdfFileObj = open(filename, 'rb')
-#    pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
-#    pageObj = pdfReader.getPage(0)
-#    print(pageObj.extractText())
-#    return 1
 
 #Run the main function
 if __name__ == "__main__":
