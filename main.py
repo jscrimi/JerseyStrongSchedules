@@ -1,16 +1,14 @@
+import sys
 import requests
 import re
 import pandas as pd
-import PyQt5
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
 import time
-from bs4 import BeautifulSoup
+import bs4 as bs
+import os
 
 def main():
-
-    Class Render(QWebPage):
-    
-
-
     schedule = pd.DataFrame(columns=['Location', 'Day', 'Time', 'Class', 'Instructor'])
     url = 'https://www.jerseystrong.com/group-fitness-classes-in-nj'
     baseURL = 'https://www.jerseystrong.com'
@@ -18,7 +16,7 @@ def main():
     response = requests.get(url)
     #print(response)
 
-    soup = BeautifulSoup(response.text, "html.parser")
+    soup = bs.BeautifulSoup(response.text, "html.parser")
     switchScriptString = soup.find_all("script")[17]
     #print(switchScriptString) #The 17th script on this page contains the links to the location schedules
 
@@ -32,13 +30,20 @@ def main():
     #TEST
     testURL = 'https://www.jerseystrong.com/class-schedules-east-brunswick'
     testResponse = requests.get(testURL).text
-    testSoup = BeautifulSoup(testResponse, 'html.parser')
+    testSoup = bs.BeautifulSoup(testResponse, 'html.parser')
     testiFrames = testSoup.find_all('iframe')
     extractedSRC = testiFrames[0].get('src')
     print(extractedSRC)
 
-    srcResponse = requests.get(extractedSRC).text
-    print(srcResponse)
+
+    #Render Dynamic WebPage and grab HTML from that
+    driver = webdriver.Chrome()
+    driver.implicitly_wait(30)
+    driver.get(extractedSRC)
+
+    #After opening the url, hand the source to Beautiful Soup
+    dynamicSoup = bs.BeautifulSoup(driver.page_source, 'lxml')
+    print(dynamicSoup)
 
 
     # for i in filteredStrings: #go to each website and parse out each schedule item
