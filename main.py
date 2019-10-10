@@ -30,14 +30,14 @@ def main():
     filteredStrings = ([s.replace('"', '') for s in filteredStrings])
 
     for i in filteredStrings:  # go to each website and parse out each schedule item
-        print(i[17:])
+        #print(i[17:])
         scheduleURL = baseURL + i
         #testURL = 'https://www.jerseystrong.com/class-schedules-east-brunswick'
         testResponse = requests.get(scheduleURL).text
         testSoup = bs.BeautifulSoup(testResponse, 'html.parser')
         testiFrames = testSoup.find_all('iframe')
         extractedSRC = testiFrames[0].get('src')
-        print(extractedSRC)
+        #print(extractedSRC)
 
         #Render Dynamic WebPage and grab HTML from that
         driver = webdriver.Chrome()
@@ -72,25 +72,77 @@ def main():
                 else:
                     course = courseAndInstructor[0]
                     instructor = "N/A"
-
-                schedule = schedule.append(pd.Series([location,days[day-1],courseTime,course,instructor],index=schedule.columns), ignore_index=True)
+                if(course != "Description"):
+                    schedule = schedule.append(pd.Series([location,days[day-1],courseTime,course,instructor],index=schedule.columns), ignore_index=True)
         time.sleep(1)
     print (schedule)
 
-    # for i in filteredStrings: #go to each website and parse out each schedule item
-    #     print(i[17:])
-    #     scheduleURL = baseURL + i
-    #     scheduleResponse = requests.get(scheduleURL)
-    #     #print(scheduleResponse)
-    #     #soup =        BeautifulSoup(response.text,         "html.parser")
-    #     #print(scheduleResponse.text)
-    #     scheduleSoup = BeautifulSoup(scheduleResponse.text, "html.parser")
-    #     #print(scheduleSoup)
-    #     tables = scheduleSoup.find_all('div')
-    #     print(tables)
-    #
-    #     time.sleep(1)
+    print()
+    print()
+    shell = 1
+    while(shell == 1):
+        print("Sort schedule by what?")
+        print("1 = Location")
+        print("2 = Day")
+        print("3 = Time")
+        print("4 = Class")
+        print("5 = Instructor")
+        print("Press 0 to Quit")
 
+        choice = int(input())
+        if choice == 0:
+            shell = 0
+        elif choice == 1: #Sort by Location
+            schedule = schedule.sort_values(by=['Location'])
+            locations = schedule.Location.unique()
+            print("Type in a Location!")
+            print(locations)
+            locationChoice = str(input())
+            if (locationChoice in locations):
+                print(schedule.loc[schedule['Location'] == locationChoice].sort_index())
+            else:
+                print("That's not a valid Location")
+        elif choice == 2: #Sort by Day
+            scheDays = schedule.Day.unique()
+            print("Type in a Day!")
+            print("['SUN' 'MON' 'TUE' 'WED' 'THU' 'FRI' 'SAT']")
+            dayChoice = str(input())
+            if (dayChoice in scheDays):
+                print(schedule.loc[schedule['Day'] == dayChoice].sort_index())
+            else:
+                print("That's not a valid Day")
+        elif choice == 3: #Sort by Time
+            schedule = schedule.sort_values(by=['Time'])
+            times = schedule.Time.unique()
+            print("Type in a Time!")
+            print(times)
+            timeChoice = str(input())
+            if (timeChoice in times):
+                print(schedule.loc[schedule['Time'] == timeChoice].sort_index())
+            else:
+                print("That's not a valid Time")
+        elif choice == 4: #Sort by Class
+            schedule = schedule.sort_values(by=['Class'])
+            courses = schedule.Class.unique()
+            print("Type in a Class!")
+            print(courses)
+            courseChoice = str(input())
+            if (courseChoice in courses):
+                print(schedule.loc[schedule['Class'] == courseChoice].sort_index())
+            else:
+                print("That's not a valid Class")
+        elif choice == 5: #Sort by Instructor
+            schedule = schedule.sort_values(by=['Instructor'])
+            instructors = schedule.Instructor.unique()
+            print("Type in a Instructor!")
+            print(instructors)
+            instructorChoice = str(input())
+            if (instructorChoice in instructors):
+                print(schedule.loc[schedule['Instructor'] == instructorChoice].sort_index())
+            else:
+                print("That's not a valid Instructor")
+        else:
+            "That's not a valid option, try again"
     return 0
 
 #Run the main function
