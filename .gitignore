@@ -105,3 +105,6 @@ venv.bak/
 
 #pdfs
 *.pdf
+
+#client json file
+client_secret.json
