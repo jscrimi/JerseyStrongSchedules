@@ -1,14 +1,81 @@
-import sys
 import requests
 import re
 import pandas as pd
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 import time
 import bs4 as bs
-import os
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+import gspread_dataframe as gsd
+import datetime
 
 def main():
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.max_rows', None)
+    pd.set_option('display.width', 100)
+
+    # use creds to create a client to interact with the Google Drive API
+    scope = ['https://spreadsheets.google.com/feeds',
+             'https://www.googleapis.com/auth/drive']
+    creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
+    client = gspread.authorize(creds)
+    #sheetsAvailable = client.list_spreadsheet_files()
+    #print("sheets:")
+    #print(sheetsAvailable)
+
+    # Find a workbook by name and open the first sheet
+    # Make sure you use the right name here.
+    sheet = client.open("Jersey Strong Schedules").sheet1
+
+    today = datetime.date.today()
+    SundayOffset = (today.weekday() - 6)%7
+    lastSunday = today - datetime.timedelta(days=SundayOffset)
+    lastSunday = str(lastSunday)
+
+    weekOf = sheet.cell(1,2).value
+    print(today)
+    print(lastSunday)
+    print(weekOf)
+
+    updateSchedule(sheet)
+
+    #########################
+    ### When running on Windows Task Scheduler...
+    ### switch which of these lines is commented
+    ###    If running manually: manual = 1 should be uncommented
+    ###    If running on a timer: manual = 0 should be uncommented
+    # manual = 1
+    manual = 0
+    if(manual == 1):
+        if weekOf == "":
+            print("No Schedule Found, updating now")
+            sheet.update_cell(1,2,str(lastSunday))
+            updateSchedule(sheet)
+        elif weekOf != lastSunday:
+            print("Schedule outdated, found from: ", weekOf)
+            print("Would you like to update?")
+            print("1 = Yes, Update")
+            print("2 = No, Don't Update")
+            choice = int(input())
+            if choice == 1:
+                sheet.update_cell(1, 2, str(lastSunday))
+                updateSchedule(sheet)
+            elif choice == 2:
+                df = gsd.get_as_dataframe(sheet, parse_dates=True, usecols=[0, 4], skiprows=1)
+                displaySchedule(df)
+            else:
+                print("Invalid Option, quitting")
+                return 0
+        else:
+            print("Schedule found from this week, printing")
+            df = gsd.get_as_dataframe(sheet, parse_dates = True, usecols=[0,1,2,3,4], skiprows=1)
+            displaySchedule(df)
+    else: #manual == 0 (running on automatic task scheduler)
+        sheet.update_cell(1, 2, str(lastSunday))
+        updateSchedule(sheet)
+
+def updateSchedule(sheet):
+
     schedule = pd.DataFrame(columns=['Location', 'Day', 'Time', 'Class', 'Instructor'])
     pd.set_option('display.max_columns', None)
     pd.set_option('display.max_rows', None)
@@ -51,7 +118,7 @@ def main():
         dynamicSoup = bs.BeautifulSoup(driver.page_source, 'lxml')
         driver.quit()
         tables = dynamicSoup.find_all('tr')
-        days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', ' ']
+        days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'NA']
         day = 0
 
         for row in tables:
@@ -75,11 +142,24 @@ def main():
                 if(course != "Description"):
                     schedule = schedule.append(pd.Series([location,days[day-1],courseTime,course,instructor],index=schedule.columns), ignore_index=True)
         time.sleep(1)
+
+    gsd.set_with_dataframe(sheet, schedule, row=2, col=1)
+    displaySchedule(schedule)
+
+
+def displaySchedule(schedule):
+
     print (schedule)
 
     print()
     print()
-    shell = 1
+    #########################
+    ### When running on Windows Task Scheduler...
+    ### switch which of these lines is commented
+    ###    If running manually: shell = 1 should be uncommented
+    ###    If running on a timer: shell = 0 should be uncommented
+    #shell = 1
+    shell = 0
     while(shell == 1):
         print("Sort schedule by what?")
         print("1 = Location")
