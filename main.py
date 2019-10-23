@@ -37,8 +37,6 @@ def main():
     print(lastSunday)
     print(weekOf)
 
-    updateSchedule(sheet)
-
     #########################
     ### When running on Windows Task Scheduler...
     ### switch which of these lines is commented
@@ -73,6 +71,7 @@ def main():
     else: #manual == 0 (running on automatic task scheduler)
         sheet.update_cell(1, 2, str(lastSunday))
         updateSchedule(sheet)
+        return 0
 
 def updateSchedule(sheet):
 
