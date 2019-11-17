@@ -59,23 +59,25 @@ def main():
                 sheet.update_cell(1, 2, str(lastSunday))
                 updateSchedule(sheet)
             elif choice == 2:
-                df = gsd.get_as_dataframe(sheet, parse_dates=True, usecols=[0, 4], skiprows=1)
+                df = gsd.get_as_dataframe(sheet, parse_dates=True, usecols=[0,1,2,3,4,5], skiprows=1)
                 displaySchedule(df)
             else:
                 print("Invalid Option, quitting")
                 return 0
         else:
             print("Schedule found from this week, printing")
-            df = gsd.get_as_dataframe(sheet, parse_dates = True, usecols=[0,1,2,3,4], skiprows=1)
+            df = gsd.get_as_dataframe(sheet, parse_dates = True, usecols=[0,1,2,3,4,5], skiprows=1)
             displaySchedule(df)
     else: #manual == 0 (running on automatic task scheduler)
-        sheet.update_cell(1, 2, str(lastSunday))
         updateSchedule(sheet)
+        #update data on sheet only if schedule gets updated
+        sheet.update_cell(1, 2, str(lastSunday))
         return 0
+    return 0
 
 def updateSchedule(sheet):
 
-    schedule = pd.DataFrame(columns=['Location', 'Day', 'Time', 'Class', 'Instructor'])
+    schedule = pd.DataFrame(columns=['Location', 'Day', 'Time', 'Class', 'Instructor First Name', 'Instructor Last Name'])
     pd.set_option('display.max_columns', None)
     pd.set_option('display.max_rows', None)
     pd.set_option('display.width', 100)
@@ -129,21 +131,32 @@ def updateSchedule(sheet):
                 continue
             else:
                 location = scheduleURL[45:]
+                print(location)
                 courseTime = row.contents[1].text
                 courseAndInstructor = row.contents[5].text.split('with ')
-                #print(courseAndInstructor)
+                print(courseAndInstructor)
                 if(len(courseAndInstructor) == 2):
                     course = courseAndInstructor[0]
-                    instructor = courseAndInstructor[1]
+                    instructor = courseAndInstructor[1].split(' ')
+                    instructorFN = instructor[0]
+                    instructorLN = instructor[1]
                 else:
                     course = courseAndInstructor[0]
                     instructor = "N/A"
+                    instructorFN = instructor
+                    instructorLN = instructor
                 if(course != "Description"):
-                    schedule = schedule.append(pd.Series([location,days[day-1],courseTime,course,instructor],index=schedule.columns), ignore_index=True)
+                    schedule = schedule.append(pd.Series([location,days[day-1],courseTime,course,instructorFN,instructorLN],index=schedule.columns), ignore_index=True)
         time.sleep(1)
 
+    cell_list = sheet.range('A3:F2000')
+    for cell in cell_list:
+        print(cell.col, cell.row)
+        cell.value = ""
+    sheet.update_cells(cell_list)
     gsd.set_with_dataframe(sheet, schedule, row=2, col=1)
     displaySchedule(schedule)
+    return 0
 
 
 def displaySchedule(schedule):
@@ -211,7 +224,7 @@ def displaySchedule(schedule):
             else:
                 print("That's not a valid Class")
         elif choice == 5: #Sort by Instructor
-            schedule = schedule.sort_values(by=['Instructor'])
+            schedule = schedule.sort_values(by=['Instructor First Name'])
             instructors = schedule.Instructor.unique()
             print("Type in a Instructor!")
             print(instructors)
