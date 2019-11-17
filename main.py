@@ -131,10 +131,10 @@ def updateSchedule(sheet):
                 continue
             else:
                 location = scheduleURL[45:]
-                print(location)
+                #print(location)
                 courseTime = row.contents[1].text
                 courseAndInstructor = row.contents[5].text.split('with ')
-                print(courseAndInstructor)
+                #print(courseAndInstructor)
                 if(len(courseAndInstructor) == 2):
                     course = courseAndInstructor[0]
                     instructor = courseAndInstructor[1].split(' ')
@@ -146,6 +146,7 @@ def updateSchedule(sheet):
                     instructorFN = instructor
                     instructorLN = instructor
                 if(course != "Description"):
+                    print(location,days[day-1],courseTime,course,instructorFN,instructorLN)
                     schedule = schedule.append(pd.Series([location,days[day-1],courseTime,course,instructorFN,instructorLN],index=schedule.columns), ignore_index=True)
         time.sleep(1)
 
